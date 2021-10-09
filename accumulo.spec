@@ -6,7 +6,7 @@
 
 Name:    accumulo
 Version: 2.0.1
-Release: 1
+Release: 2
 Summary: A software platform for processing vast amounts of data
 License: Apache-2.0 and  BSD
 Group:   Development/Libraries
@@ -24,7 +24,7 @@ Source9: auditLog.xml
 
 Patch0:  0001-add-dependent-package-to-lib.patch
 
-BuildRequires: java-1.8.0-openjdk-devel maven maven-local
+BuildRequires: java-1.8.0-openjdk-devel maven maven-local gcc-c++
 Requires: java-1.8.0-openjdk
 Requires(pre): /usr/sbin/useradd
 Requires: apache-commons-cli apache-commons-codec apache-commons-collections apache-commons-configuration
@@ -121,12 +121,17 @@ if [ -n "\${VERBOSE}" ]; then
   echo "arguments used: \${*}"
 fi
 
+if [[ \${@} == "classpath" ]]; then
+  echo "\${CLASSPATH}"
+  exit 0
+fi
+
 export CLASSPATH
 exec "\${JAVACMD}" "\${FLAGS[@]}" "\${ACCUMULO_OPTS[@]}" "\${MAIN_CLASS}" "\${@}"
 EOF
 
 # scripts for services/utilities
-for service in master tserver shell init admin gc tracer classpath version rfile-info login-info zookeeper create-token info jar; do
+for service in master tserver shell init admin gc tracer classpath version rfile-info login-info zookeeper create-token info; do
   cat <<EOF >"%{name}-$service"
 #!/usr/bin/bash
 echo "%{name}-$service script is deprecated. Use '%{name} $service' instead." 1>&2
@@ -169,7 +174,6 @@ install -p -m 644 README.md %{buildroot}%{_datadir}/doc/%{name}/
 %{_bindir}/%{name}-zookeeper
 %{_bindir}/%{name}-create-token
 %{_bindir}/%{name}-info
-%{_bindir}/%{name}-jar
 %attr(0750, %{name}, -) %dir %{_var}/cache/%{name}
 %attr(0755, %{name}, -) %dir %{_sysconfdir}/%{name}
 %attr(0755, %{name}, -) %dir %{_sysconfdir}/%{name}/lib
@@ -232,5 +236,8 @@ if [ -z ${hadoop_info} ];then
 fi
 
 %changelog
-* Mon Jun 21 2021 Ge Wang <wangge20@huawei> - 2.0.1-1
+* Fri Oct 08 2021 lingsheng <lingsheng@huawei.com> - 2.0.1-2
+- Remove useless accumulo-jar and fix accumulo-classpath output
+
+* Mon Jun 21 2021 Ge Wang <wangge20@huawei.com> - 2.0.1-1
 - Initial packaging
